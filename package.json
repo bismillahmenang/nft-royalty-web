@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "vue": "^3.2.13"
+    "primeicons": "^6.0.1",
+    "primevue": "^3",
+    "vue": "^3.2.13",
+    "vuetify": "^3.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
