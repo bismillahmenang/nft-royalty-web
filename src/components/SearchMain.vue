@@ -190,7 +190,7 @@
                         </DataTable>
                         source: <a target="_blank"
                                    :href="`https://api.coralcube.cc/0dec5037-f67d-4da8-9eb6-97e2a09ffe9a/inspector/getMintActivities?update_authority=${updateAuthority}&collection_symbol=${aaa}&limit=1`">Coral
-                        Cube API</a>
+                                   Cube API</a> and <a target="_blank" href="https://github.com/bismillahmenang/coral-auto">Saved coral cube data</a>
                     </template>
                 </v-card>
                 <v-card class="my-2">

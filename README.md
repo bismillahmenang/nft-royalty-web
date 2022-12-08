@@ -1,5 +1,15 @@
 # nft-royalty-web
 
+Get data of solana nft royalty easily using this app
+
+# Video demo
+
+https://youtu.be/Bmh1M7_raiI
+
+# Website demo
+
+https://nft-royalty-web.vercel.app/
+
 ## Project setup
 ```
 yarn install
