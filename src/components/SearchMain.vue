@@ -99,7 +99,7 @@
                         Total royalty for NFT {{ NFTMetadata?.data?.name }} from {{ startDate }} to {{ endDate }}
                     </template>
                     <template v-slot:text>
-                    <span class="text-h5 text-bold"> {{ lamportsToSol(totalRoyalty) }} SOL ≈ {{totalRoyaltyUSD}} USD</span>
+                        <span class="text-h5 text-bold"> {{ lamportsToSol(totalRoyalty) }} SOL ≈ {{ totalRoyaltyUSD }} USD</span>
                     </template>
                 </v-card>
                 <v-card class="my-2">
@@ -205,12 +205,12 @@
                                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                                    :rowsPerPageOptions="[5,10]" responsiveLayout="scroll"
                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}">
-                        <Column field="buyer" header="Buyer address" :sortable="true">
-                        <template #body="{data}">
-                        <a :href="`https://solscan.io/account/${data.buyer}`"
-                        target="_blank">{{ truncateInTheMiddle(data.buyer, 10) }}</a>
-                        </template>
-                        </Column>
+                            <Column field="buyer" header="Buyer address" :sortable="true">
+                                <template #body="{data}">
+                                    <a :href="`https://solscan.io/account/${data.buyer}`"
+                                       target="_blank">{{ truncateInTheMiddle(data.buyer, 10) }}</a>
+                                </template>
+                            </Column>
                             <Column field="mint" header="Mint Address" :sortable="true">
                                 <template #body="{data}">
                                     <a :href="`https://solscan.io/token/${data.mint}`"
@@ -244,9 +244,33 @@
                         Total royalty paid to {{ collectionName }} collections from {{ startDate }} to {{ endDate }}
                     </template>
                     <template v-slot:text>
-                    <span class="text-h5 text-bold">{{ lamportsToSol(totalCollectionsRoyalty) }} SOL ≈ {{totalCollectionUSD}} USD</span>
+                        <span class="text-h5 text-bold">{{
+                                lamportsToSol(totalCollectionsRoyalty)
+                            }} SOL ≈ {{ totalCollectionUSD }} USD</span>
                     </template>
                 </v-card>
+                <v-card class="my-2">
+                    <template v-slot:title>
+                        Total royalty paid to {{ collectionName }} collections by date from {{ startDate }} to
+                        {{ endDate }}
+                    </template>
+                    <template v-slot:text>
+                        <Bar
+                                id="my-chart-id"
+                                :options="chartOptions"
+                                :data="chartData"
+                        />
+                    </template>
+                </v-card>
+            <v-card class="my-2">
+            <template v-slot:title>
+            Address that pay most royalty to {{ collectionName }} collections from {{ startDate }} to
+            {{ endDate }}
+            </template>
+            <template v-slot:text>
+            <Doughnut :data="addressPay" :options="chartOptions"  />
+            </template>
+            </v-card>
             </div>
         </v-container>
     </v-form>
@@ -260,9 +284,13 @@ import {
     getNFTUpdateAuthorityAndCollectionName,
     getImageFromURI,
     getNFTRoyalty,
-solToUsd
+    solToUsd
 } from '../../services'
 import {lamportsToSol, ISOdateToReadable, truncateInTheMiddle, isoToDate, sortDate} from "../../utils"
+import {Bar,Doughnut} from 'vue-chartjs'
+import {Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement} from 'chart.js'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement)
 
 const search = ref(false)
 const totalRoyalty = ref(0)
@@ -281,8 +309,20 @@ const royaltyFilter = ref([])
 const royaltyGiver = ref([])
 const royaltyCollectionGiver = ref([])
 const totalCollectionsRoyalty = ref([])
-const totalCollectionUSD=ref(0)
-const totalRoyaltyUSD=ref(0)
+const totalCollectionUSD = ref(0)
+const totalRoyaltyUSD = ref(0)
+const chartData = ref({
+    labels: [],
+    datasets: [{data: []}]
+})
+const addressPay= ref({
+labels: [],
+datasets: [{data: []}]
+})
+const chartOptions = {
+    responsive: true
+}
+
 function isEmpty(obj) {
     return Object.getOwnPropertyNames(obj).length === 0;
 }
@@ -337,7 +377,7 @@ async function searchNFT() {
                 let newObj = acc + obj.royalty_fee
                 return newObj
             }, 0)
-    totalRoyaltyUSD.value=await solToUsd(lamportsToSol(totalRoyalty.value))
+        totalRoyaltyUSD.value = await solToUsd(lamportsToSol(totalRoyalty.value))
         royaltyGiver.value = royaltyData.value.filter(({royalty_fee, mint}) => royalty_fee > 0 && mint === NFTId.value)
         royaltyCollectionGiver.value = royaltyData.value.filter(({royalty_fee}) => royalty_fee > 0)
         totalCollectionsRoyalty.value = royaltyData.value.filter(({royalty_fee}) => royalty_fee > 0)
@@ -345,31 +385,62 @@ async function searchNFT() {
                 let newObj = acc + obj.royalty_fee
                 return newObj
             }, 0)
-    totalCollectionUSD.value=await solToUsd(lamportsToSol(totalCollectionsRoyalty.value))
-    const royaltyByDate=royaltyData.value.reduce((acc, cur) => {
-    // If the current date is not in the accumulation object, add it
-    // and initialize the count for that date to 0
+        totalCollectionUSD.value = await solToUsd(lamportsToSol(totalCollectionsRoyalty.value))
+        let royaltyByDate = royaltyData.value.reduce((acc, cur) => {
+            // If the current date is not in the accumulation object, add it
+            // and initialize the count for that date to 0
 
-    const date = new Date(cur.time);
-    const formattedDate = date.toLocaleDateString("en-US", {
-day: "2-digit",
-month: "2-digit",
-year: "numeric",
-});
-    if (!acc[formattedDate]) {
-    acc[formattedDate] = 0;
+            const date = new Date(cur.time);
+            const formattedDate = date.toLocaleDateString("en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            });
+            if (!acc[formattedDate]) {
+                acc[formattedDate] = 0;
+            }
+
+            // If the current object has the property "royalty" set to true,
+            // increment the count for the current date
+            if (cur.royalty_fee) {
+                acc[formattedDate] += cur.royalty_fee;
+            }
+
+            return acc;
+        }, []);
+    const keys = Object.keys(royaltyByDate);
+    const values = Object.values(royaltyByDate).map(a=>lamportsToSol(a));
+    const addressThatPayTheMost=royaltyCollectionGiver.value.reduce((acc, cur) => {
+
+    if (!acc[cur.buyer]) {
+    acc[cur.buyer] = 0;
     }
 
     // If the current object has the property "royalty" set to true,
     // increment the count for the current date
     if (cur.royalty_fee) {
-    acc[formattedDate]+=cur.royalty_fee;
+    acc[cur.buyer] += cur.royalty_fee;
     }
 
     return acc;
-    }, []);
-    console.log(royaltyByDate)
-    loading.value = false
+    }, [])
+    const keys2=Object.keys(addressThatPayTheMost)
+    const values2=Object.values(addressThatPayTheMost).map(a=>lamportsToSol(a));
+    const colors = Array.from({ length: values2.length }, () =>
+    "#" + Math.floor(Math.random() * 16777215).toString(16)
+    );
+
+    addressPay.value={
+    labels: [...keys2],
+    datasets: [{ label: 'Royalty fee data in SOL',
+    backgroundColor: [...colors],data: [...values2]}]
+    };
+        chartData.value = {
+            labels: [...keys],
+        datasets: [{ label: 'Royalty fee data in SOL',
+        backgroundColor: '#f87979',data: [...values]}]
+        };
+        loading.value = false
         search.value = false
     } catch (e) {
         console.log(e.message)
