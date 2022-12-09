@@ -94,7 +94,14 @@
                                 target="_blank">{{ updateAuthority }}</a></div>
                     </template>
                 </v-card>
-                <v-card class="my-2">
+                <div v-if="loading2">
+                    <v-progress-circular
+                            color="info"
+                            indeterminate
+                            size="24"
+                    ></v-progress-circular>
+                </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         Total royalty for NFT {{ NFTMetadata?.data?.name }} from {{ startDate }} to {{ endDate }}
                     </template>
@@ -102,7 +109,14 @@
                         <span class="text-h5 text-bold"> {{ lamportsToSol(totalRoyalty) }} SOL ≈ {{ totalRoyaltyUSD }} USD</span>
                     </template>
                 </v-card>
-                <v-card class="my-2">
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         List of address who pay royalty to NFT {{ NFTMetadata?.data?.name }} from {{ startDate }} to
                         {{ endDate }}
@@ -128,7 +142,14 @@
                     </template>
                 </v-card>
                 <div class="text-center text-h3 my-5">NFT Collections {{ collectionName }} Royalty Detail</div>
-                <v-card class="my-2">
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         All Transactions sales of collection {{ collectionName }} from {{ startDate }} to {{ endDate }}
                     </template>
@@ -190,10 +211,18 @@
                         </DataTable>
                         source: <a target="_blank"
                                    :href="`https://api.coralcube.cc/0dec5037-f67d-4da8-9eb6-97e2a09ffe9a/inspector/getMintActivities?update_authority=${updateAuthority}&collection_symbol=${aaa}&limit=1`">Coral
-                                   Cube API</a> and <a target="_blank" href="https://github.com/bismillahmenang/coral-auto">Saved coral cube data</a>
+                        Cube API</a> and <a target="_blank" href="https://github.com/bismillahmenang/coral-auto">Saved
+                        coral cube data</a>
                     </template>
                 </v-card>
-                <v-card class="my-2">
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         Address that paid royalty to {{ collectionName }} collections from {{ startDate }} to {{
                             endDate
@@ -239,7 +268,14 @@
                         </DataTable>
                     </template>
                 </v-card>
-                <v-card class="my-2">
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         Total royalty paid to {{ collectionName }} collections from {{ startDate }} to {{ endDate }}
                     </template>
@@ -249,7 +285,14 @@
                             }} SOL ≈ {{ totalCollectionUSD }} USD</span>
                     </template>
                 </v-card>
-                <v-card class="my-2">
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
                     <template v-slot:title>
                         Total royalty paid to {{ collectionName }} collections by date from {{ startDate }} to
                         {{ endDate }}
@@ -262,15 +305,22 @@
                         />
                     </template>
                 </v-card>
-            <v-card class="my-2">
-            <template v-slot:title>
-            Address that pay most royalty to {{ collectionName }} collections from {{ startDate }} to
-            {{ endDate }}
-            </template>
-            <template v-slot:text>
-            <Doughnut :data="addressPay" :options="chartOptions"  />
-            </template>
-            </v-card>
+            <div v-if="loading2">
+            <v-progress-circular
+            color="info"
+            indeterminate
+            size="24"
+            ></v-progress-circular>
+            </div>
+                <v-card v-else class="my-2">
+                    <template v-slot:title>
+                        Address that pay most royalty to {{ collectionName }} collections from {{ startDate }} to
+                        {{ endDate }}
+                    </template>
+                    <template v-slot:text>
+                        <Doughnut :data="addressPay" :options="chartOptions"/>
+                    </template>
+                </v-card>
             </div>
         </v-container>
     </v-form>
@@ -287,10 +337,10 @@ import {
     solToUsd
 } from '../../services'
 import {lamportsToSol, ISOdateToReadable, truncateInTheMiddle, isoToDate, sortDate} from "../../utils"
-import {Bar,Doughnut} from 'vue-chartjs'
-import {Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement} from 'chart.js'
+import {Bar, Doughnut} from 'vue-chartjs'
+import {Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement} from 'chart.js'
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement)
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
 const search = ref(false)
 const totalRoyalty = ref(0)
@@ -311,13 +361,14 @@ const royaltyCollectionGiver = ref([])
 const totalCollectionsRoyalty = ref([])
 const totalCollectionUSD = ref(0)
 const totalRoyaltyUSD = ref(0)
+const loading2 = ref(false)
 const chartData = ref({
     labels: [],
     datasets: [{data: []}]
 })
-const addressPay= ref({
-labels: [],
-datasets: [{data: []}]
+const addressPay = ref({
+    labels: [],
+    datasets: [{data: []}]
 })
 const chartOptions = {
     responsive: true
@@ -338,6 +389,7 @@ onMounted(async () => {
 
 async function searchNFT() {
     loading.value = true
+    loading2.value = true
     try {
         const {collectionId: CI} = await getNFTCollectionId(NFTId.value)
 
@@ -360,7 +412,9 @@ async function searchNFT() {
             _royaltyData = {}
             _royaltyData.items = []
             _royaltyData.items = await getNFTRoyalty(_updateAuthority, _collectionName)
+            loading.value = false
         } else {
+            loading.value = false
             while (_royaltyData.last) {
                 let royal = await getNFTRoyaltyFromDeta(_updateAuthority, _collectionName, NFTId.value, _royaltyData.last)
                 _royaltyData.items = _royaltyData.items.concat(royal.items)
@@ -408,43 +462,49 @@ async function searchNFT() {
 
             return acc;
         }, []);
-    const keys = Object.keys(royaltyByDate);
-    const values = Object.values(royaltyByDate).map(a=>lamportsToSol(a));
-    const addressThatPayTheMost=royaltyCollectionGiver.value.reduce((acc, cur) => {
+        const keys = Object.keys(royaltyByDate);
+        const values = Object.values(royaltyByDate).map(a => lamportsToSol(a));
+        const addressThatPayTheMost = royaltyCollectionGiver.value.reduce((acc, cur) => {
 
-    if (!acc[cur.buyer]) {
-    acc[cur.buyer] = 0;
-    }
+            if (!acc[cur.buyer]) {
+                acc[cur.buyer] = 0;
+            }
 
-    // If the current object has the property "royalty" set to true,
-    // increment the count for the current date
-    if (cur.royalty_fee) {
-    acc[cur.buyer] += cur.royalty_fee;
-    }
+            // If the current object has the property "royalty" set to true,
+            // increment the count for the current date
+            if (cur.royalty_fee) {
+                acc[cur.buyer] += cur.royalty_fee;
+            }
 
-    return acc;
-    }, [])
-    const keys2=Object.keys(addressThatPayTheMost)
-    const values2=Object.values(addressThatPayTheMost).map(a=>lamportsToSol(a));
-    const colors = Array.from({ length: values2.length }, () =>
-    "#" + Math.floor(Math.random() * 16777215).toString(16)
-    );
+            return acc;
+        }, [])
+        const keys2 = Object.keys(addressThatPayTheMost)
+        const values2 = Object.values(addressThatPayTheMost).map(a => lamportsToSol(a));
+        const colors = Array.from({length: values2.length}, () =>
+            "#" + Math.floor(Math.random() * 16777215).toString(16)
+        );
 
-    addressPay.value={
-    labels: [...keys2],
-    datasets: [{ label: 'Royalty fee data in SOL',
-    backgroundColor: [...colors],data: [...values2]}]
-    };
+        addressPay.value = {
+            labels: [...keys2],
+            datasets: [{
+                label: 'Royalty fee data in SOL',
+                backgroundColor: [...colors], data: [...values2]
+            }]
+        };
         chartData.value = {
             labels: [...keys],
-        datasets: [{ label: 'Royalty fee data in SOL',
-        backgroundColor: '#f87979',data: [...values]}]
+            datasets: [{
+                label: 'Royalty fee data in SOL',
+                backgroundColor: '#f87979', data: [...values]
+            }]
         };
-        loading.value = false
+
+        loading2.value = false
         search.value = false
     } catch (e) {
         console.log(e.message)
         loading.value = false
+        loading2.value = false
         search.value = true
     }
 
